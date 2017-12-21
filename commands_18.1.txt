@@ -1,0 +1,39 @@
+import org.apache.spark.sql.types.{StructType, StringType, IntegerType, StructField}
+val user_rdd = sc.textFile("/home/acadgild/assignment_18.1/S18_Dataset_User_details.txt")
+case class User(user_id:Int, name:String, age:Int)
+val user_df = user_rdd.map(_.split(",")).map(x=> User(x(0).toInt, x(1).toString, x(2).toInt)).toDF
+user_df.registerTempTable("User")
+sqlContext.sql("SELECT * From User").show()
+
+val travel_rdd = sc.textFile("/home/acadgild/assignment_18.1/S18_Dataset_Holidays.txt")
+case class Travel(user_id:Int, src:String, dest:String, travel_mode:String, distance:Float, year_of_travel:Int)
+val travel_df = travel_rdd.map(_.split(",")).map(x=> Travel(x(0).toInt, x(1).toString, x(2).toString, x(3).toString, x(4).toFloat, x(5).toInt)).toDF
+travel_df.registerTempTable("Travel")
+sqlContext.sql("SELECT * From Travel").show()
+
+val transport_rdd = sc.textFile("/home/acadgild/assignment_18.1/S18_Dataset_Transport.txt")
+case class Transport(travel_mode:String, cost_per_unit:Float)
+val transport_df = transport_rdd.map(_.split(",")).map(x=> Transport(x(0).toString, x(1).toFloat)).toDF
+transport_df.registerTempTable("Transport")
+sqlContext.sql("SELECT * From Transport").show()
+
+
+Task1:
+
+sqlContext.sql("SELECT year_of_travel, COUNT(*) as distribution FROM Travel WHERE travel_mode='airplane' GROUP BY year_of_travel").show()
+
+Task2:
+
+
+
+sqlContext.sql("SELECT us.user_id, us.name, trav.year_of_travel, SUM(distance) AS total_air_distace FROM Travel trav JOIN User us on trav.user_id=us.user_id  WHERE travel_mode='airplane' GROUP BY us.user_id,us.name,trav.year_of_travel ORDER BY        us.user_id, us.name, trav.year_of_travel").show()
+
+Task3:
+
+sqlContext.sql("SELECT us.user_id, us.name, SUM(trav.distance) AS total_air_distance FROM Travel trav JOIN User us ON        trav.user_id= us.user_id GROUP BY us.user_id,us.name ORDER BY total_air_distance DESC LIMIT 1").show()
+
+
+Task4:
+sqlContext.sql("SELECT dest, COUNT(*) AS distribution FROM Travel GROUP BY dest ORDER BY distribution DESC LIMIT 1").show()
+
+
